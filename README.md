@@ -1,8 +1,11 @@
 # database
 Private database
 
-1 thread por cada connecção e não por pedido
-
-A minha aplicação não faz updates, só cria e lê.
-Ainda não tenho nenhuma metrica de tempo, vou fazer hoje de tarde.
-
+### Usage:
+To run the **Server** in the bin file use:
+./run.sh 
+It will begin a instance of the application on port 5000
+To run the **GET** in the bin file use:
+./get <key>
+To run the **PUT** in the bin file use:
+./put <key> <value>
