@@ -1,8 +1,10 @@
+#include <cstring>
 #include <fstream>
 #include <iostream>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <pthread.h>
+#include <sstream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,7 +13,15 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <vector>
+
 using namespace std;
+
+#define MAX_THREADS 64
+
+
+char* getDatabase(long long int);
+bool putDatabase(long long int, string);
 
 void *task1(void *);
 
@@ -19,23 +29,12 @@ static int connFd;
 
 int main(int argc, char *argv[]) {
   int pId, portNo, listenFd;
-  socklen_t len; // store size of the address
+  socklen_t len;
   bool loop = false;
   struct sockaddr_in svrAdd, clntAdd;
 
-  pthread_t threadA[3];
-
-  if (argc < 2) {
-    cerr << "Syntam : ./server <port>" << endl;
-    return 0;
-  }
-
-  portNo = atoi(argv[1]);
-
-  if ((portNo > 65535) || (portNo < 2000)) {
-    cerr << "Please enter a port number between 2000 - 65535" << endl;
-    return 0;
-  }
+  pthread_t threadA[64];
+  portNo = 5000;
 
   // create socket
   listenFd = socket(AF_INET, SOCK_STREAM, 0);
@@ -63,46 +62,76 @@ int main(int argc, char *argv[]) {
 
   int noThread = 0;
 
-  while (noThread < 3) {
+  while (true) {
     cout << "Listening" << endl;
 
     // this is where client connects. svr will hang in this mode until client
-    // conn
     connFd = accept(listenFd, (struct sockaddr *)&clntAdd, &len);
 
     if (connFd < 0) {
       cerr << "Cannot accept connection" << endl;
       return 0;
-    } else {
+    } else
       cout << "Connection successful" << endl;
-    }
 
     pthread_create(&threadA[noThread], NULL, task1, NULL);
-
     noThread++;
   }
 
-  for (int i = 0; i < 3; i++) {
+  for (int i = 0; i < noThread; i++) {
     pthread_join(threadA[i], NULL);
   }
 }
 
 void *task1(void *dummyPt) {
   cout << "Thread No: " << pthread_self() << endl;
-  char test[300];
-  bzero(test, 301);
-  bool loop = false;
-  while (!loop) {
-    bzero(test, 301);
+  // PUT/GET (3 bytes)
+  // key (8 bytes)
+  // value (1024 bytes)
+  char toGet[1035];
+  bzero(toGet, 1036);
+  read(connFd, toGet, 1035);
 
-    read(connFd, test, 300);
+  string tester(toGet);
 
-    string tester(test);
-    cout << tester << endl;
-
-    if (tester == "exit")
-      break;
+  vector<string> v;
+  std::stringstream ss(tester);
+  while (ss.good()) {
+    string substr;
+    getline(ss, substr, ',');
+    v.push_back(substr);
   }
-  cout << "\nClosing thread and conn" << endl;
+  string op = v[0];
+  long long int key = stoll(v[1]);
+
+  char toSend[1033];
+  if (op == "PUT") {
+    string value = v[2];
+    bool status = putDatabase(key, value);
+    bzero(toSend, 1033);
+    if (status)
+      strcpy(toSend, "OK");
+    else
+      strcpy(toSend, "ERRO");
+    write(connFd, toSend, strlen(toSend));
+  }
+  if (op == "GET") {
+    char *value = getDatabase(key);
+    bzero(toSend, 1033);
+    strcpy(toSend, value);
+    write(connFd, toSend, strlen(toSend));
+  }
+
+  cout << "\nEnding job" << endl;
   close(connFd);
+}
+
+char* getDatabase(long long int key) {
+
+    char* empty;
+    strcpy(empty, ",,");
+    return empty;
+}
+bool putDatabase(long long int key, string value) {
+    return true;
 }

@@ -4,8 +4,11 @@
 echo "[0] compiling server"
 g++ ../src/server.cpp -o server -lpthread
 
-echo "[1] compiling server"
-g++ ../src/client.cpp -o client
+echo "[1] compiling client get"
+g++ ../src/get.cpp -o get
 
-echo "[2] inicialize server on port 5000"
-./server 5000
+echo "[2] compiling client put"
+g++ ../src/put.cpp -o put
+
+echo "[3] inicialize server"
+./server 
