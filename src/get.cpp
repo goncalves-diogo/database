@@ -60,7 +60,7 @@ int main(int argc, char *argv[]) {
   char test[1036];
   char s[11];
 
-  bzero(test, 1036);
+  bzero(test, 1037);
   bzero(s, 11);
 
   strcpy(s, op);
@@ -70,6 +70,7 @@ int main(int argc, char *argv[]) {
   auto start = high_resolution_clock::now();
 
   write(listenFd, s, strlen(s));
+
   read(listenFd, test, 1036);
 
   cout << duration_cast<microseconds>(high_resolution_clock::now() - start ).count() << endl;

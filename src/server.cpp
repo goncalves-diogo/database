@@ -1,6 +1,9 @@
+#include "Database.h"
 #include <cstring>
 #include <fstream>
 #include <iostream>
+#include <map>
+#include <mutex>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <pthread.h>
@@ -15,13 +18,12 @@
 #include <unistd.h>
 #include <vector>
 
-using namespace std;
+using std::cerr;
+using std::cout;
+using std::endl;
+using std::vector;
 
 #define MAX_THREADS 64
-
-
-char* getDatabase(long long int);
-bool putDatabase(long long int, string);
 
 void *task1(void *);
 
@@ -51,6 +53,7 @@ int main(int argc, char *argv[]) {
   svrAdd.sin_port = htons(portNo);
 
   // bind socket
+
   if (bind(listenFd, (struct sockaddr *)&svrAdd, sizeof(svrAdd)) < 0) {
     cerr << "Cannot bind" << endl;
     return 0;
@@ -61,6 +64,8 @@ int main(int argc, char *argv[]) {
   len = sizeof(clntAdd);
 
   int noThread = 0;
+
+  Database db;
 
   while (true) {
     cout << "Listening" << endl;
@@ -74,7 +79,7 @@ int main(int argc, char *argv[]) {
     } else
       cout << "Connection successful" << endl;
 
-    pthread_create(&threadA[noThread], NULL, task1, NULL);
+    pthread_create(&threadA[noThread], NULL, task1, &db);
     noThread++;
   }
 
@@ -83,7 +88,7 @@ int main(int argc, char *argv[]) {
   }
 }
 
-void *task1(void *dummyPt) {
+void *task1(void *db) {
   cout << "Thread No: " << pthread_self() << endl;
   // PUT/GET (3 bytes)
   // key (8 bytes)
@@ -102,12 +107,12 @@ void *task1(void *dummyPt) {
     v.push_back(substr);
   }
   string op = v[0];
-  long long int key = stoll(v[1]);
+  long long key = stoll(v[1]);
 
   char toSend[1033];
   if (op == "PUT") {
     string value = v[2];
-    bool status = putDatabase(key, value);
+    bool status = ((Database *)db)->put(key, value);
     bzero(toSend, 1033);
     if (status)
       strcpy(toSend, "OK");
@@ -116,22 +121,15 @@ void *task1(void *dummyPt) {
     write(connFd, toSend, strlen(toSend));
   }
   if (op == "GET") {
-    char *value = getDatabase(key);
+    string value = ((Database *)db)->get(key);
     bzero(toSend, 1033);
-    strcpy(toSend, value);
+    strcpy(toSend, value.c_str());
+
+    std::cout << " --- Result --- " << value << std::endl;
+
     write(connFd, toSend, strlen(toSend));
   }
 
   cout << "\nEnding job" << endl;
   close(connFd);
-}
-
-char* getDatabase(long long int key) {
-
-    char* empty;
-    strcpy(empty, ",,");
-    return empty;
-}
-bool putDatabase(long long int key, string value) {
-    return true;
 }
