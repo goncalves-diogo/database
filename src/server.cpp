@@ -19,7 +19,6 @@
 #include <vector>
 
 using std::cerr;
-using std::cout;
 using std::endl;
 using std::vector;
 
@@ -68,7 +67,6 @@ int main(int argc, char *argv[]) {
   Database db;
 
   while (true) {
-    cout << "Listening" << endl;
 
     // this is where client connects. svr will hang in this mode until client
     connFd = accept(listenFd, (struct sockaddr *)&clntAdd, &len);
@@ -76,8 +74,7 @@ int main(int argc, char *argv[]) {
     if (connFd < 0) {
       cerr << "Cannot accept connection" << endl;
       return 0;
-    } else
-      cout << "Connection successful" << endl;
+    }
 
     pthread_create(&threadA[noThread], NULL, task1, &db);
     noThread++;
@@ -89,7 +86,6 @@ int main(int argc, char *argv[]) {
 }
 
 void *task1(void *db) {
-  cout << "Thread No: " << pthread_self() << endl;
   // PUT/GET (3 bytes)
   // key (8 bytes)
   // value (1024 bytes)
@@ -125,11 +121,9 @@ void *task1(void *db) {
     bzero(toSend, 1033);
     strcpy(toSend, value.c_str());
 
-    std::cout << " --- Result --- " << value << std::endl;
 
     write(connFd, toSend, strlen(toSend));
   }
 
-  cout << "\nEnding job" << endl;
   close(connFd);
 }

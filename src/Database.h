@@ -32,7 +32,6 @@ public:
     int counter = 0;
     while (file.read(info, 1033)) {
 
-      std::cout << " --- Information:" << info << std::endl;
       vector<string> v;
       std::stringstream ss(info);
       while (ss.good()) {
@@ -42,8 +41,6 @@ public:
       }
       long long key = stoll(v[0]);
       positions[key] = 1033 * counter++;
-      std::cout << " --- Positions key:" << key << std::endl;
-      std::cout << " --- Positions value:" << positions[key] << std::endl;
     }
     file.close();
     file = fstream("database", fstream::in | fstream::out);
@@ -57,7 +54,6 @@ public:
 
     file.seekg(0, file.end);
     int length = file.tellg();
-    std::cout << " --- Length:" << length << std::endl;
 
     if (positions.find(key) != positions.end()) {
       file.seekg(positions[key]);

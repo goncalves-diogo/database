@@ -14,4 +14,10 @@ g++ ../src/put.cpp -o put -std=c++17
 #touch database
 
 echo "[4] inicialize server"
-./server 
+./server &
+
+#echo "[5] begin test"
+#for (( i = 0; i < 1024; i++ )); do
+   #./put 1 abc 
+   #./get 1
+#done
